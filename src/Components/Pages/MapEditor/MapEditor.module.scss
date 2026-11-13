@@ -1,0 +1,137 @@
+.container {
+	// Add your styles here
+}
+
+* {
+	box-sizing: border-box;
+}
+body {
+	margin: 0;
+	font-family: system-ui, sans-serif;
+	height: 100vh;
+	overflow: hidden;
+}
+#app {
+	display: flex;
+	height: 100vh;
+}
+#canvas {
+	flex: 1;
+	background: #fafafa;
+	touch-action: none;
+	cursor: crosshair;
+	user-select: none;
+}
+#panel {
+	width: 240px;
+	padding: 14px;
+	border-left: 1px solid #e0e0e0;
+	background: #fff;
+	overflow-y: auto;
+}
+#panel h3 {
+	margin: 16px 0 10px;
+	font-size: 15px;
+}
+#panel h3:first-child {
+	margin-top: 0;
+}
+#panel label {
+	display: block;
+	font-size: 13px;
+	margin: 10px 0 4px;
+	color: #444;
+}
+#panel input[type='range'] {
+	width: 100%;
+}
+#panel button {
+	width: 100%;
+	padding: 8px;
+	margin: 4px 0;
+	border: 1px solid #ccc;
+	background: #f6f6f6;
+	border-radius: 6px;
+	cursor: pointer;
+	font-size: 13px;
+}
+#panel button:hover {
+	background: #eee;
+}
+#panel .hint {
+	font-size: 12px;
+	color: #777;
+	line-height: 1.6;
+	margin-top: 14px;
+}
+#rooms-list {
+	font-size: 13px;
+	margin-top: 8px;
+}
+#rooms-list div {
+	padding: 4px 0;
+	border-bottom: 1px solid #f0f0f0;
+	display: flex;
+	justify-content: space-between;
+	gap: 6px;
+	align-items: center;
+}
+#rooms-list input {
+	flex: 1;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	padding: 2px 4px;
+	font-size: 12px;
+	width: 100%;
+}
+#rooms-list .area {
+	color: #888;
+	font-size: 11px;
+	white-space: nowrap;
+}
+.tool-row {
+	display: flex;
+	gap: 6px;
+	margin-bottom: 10px;
+}
+.tool-btn {
+	flex: 1;
+	padding: 8px;
+	border: 1px solid #ccc;
+	border-radius: 6px;
+	background: #fff;
+	cursor: pointer;
+	font-size: 13px;
+	margin: 0;
+}
+.tool-btn.active {
+	background: #2a7;
+	color: #fff;
+	border-color: #2a7;
+}
+.wall {
+	stroke: #222;
+	stroke-linecap: square;
+}
+.endpoint {
+	fill: #2a7;
+	pointer-events: none;
+}
+.room-fill {
+	fill: rgba(42, 119, 85, 0.08);
+	pointer-events: none;
+}
+.room-label {
+	font-family: system-ui, sans-serif;
+	fill: #2a7;
+	text-anchor: middle;
+	pointer-events: none;
+	user-select: none;
+	cursor: pointer;
+}
+.room-area {
+	font-family: system-ui, sans-serif;
+	fill: #888;
+	text-anchor: middle;
+	pointer-events: none;
+}
