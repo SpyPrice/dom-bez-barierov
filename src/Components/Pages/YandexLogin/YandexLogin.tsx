@@ -9,9 +9,6 @@ export function LoginPage({ onLogin }: Props) {
         <div className='login-page'>
             <div className='login-page__card'>
                 <h1 className='login-page__title'>Мнемосхема дома</h1>
-                <p className='login-page__subtitle'>
-                    Войдите, чтобы управлять устройствами
-                </p>
                 <button
                     className='login-page__btn'
                     onClick={onLogin}
