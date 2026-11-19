@@ -1,4 +1,10 @@
-import type { GraphEdge, GraphNode, Point, Room, Wall } from './types'
+import type {
+	GraphEdge,
+	GraphNode,
+	Point,
+	Room,
+	Wall,
+} from '@Types/mapEditorTypes'
 
 export const dist = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.y - b.y)
 

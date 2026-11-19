@@ -1,4 +1,4 @@
-import type { Room } from '../../Pages/MapEditor/types'
+import type { Room } from '@Types/mapEditorTypes'
 
 interface Props {
 	rooms: Room[]

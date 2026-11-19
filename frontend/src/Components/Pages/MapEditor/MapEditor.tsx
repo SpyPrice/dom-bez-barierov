@@ -2,8 +2,7 @@ import { yandexApi } from '@/Api/yandexApi'
 import Canvas from '@/Components/Widgets/Canvas'
 import DeviceMenu from '@/Components/Widgets/DeviceMenu'
 import Panel from '@/Components/Widgets/Panel'
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { addWallToState, rebuildRooms } from './geometry'
+import { useHistory } from '@/Hooks/useHistory'
 import type {
 	Device,
 	DevicesResponse,
@@ -13,20 +12,15 @@ import type {
 	Tool,
 	ViewBox,
 	Wall,
-} from './types'
-import { useHistory } from './useHistory'
+} from '@Types/mapEditorTypes'
+import { addWallToState, rebuildRooms } from '@Utils/geometry'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
-interface MapEditorProps {
-	className?: string
-	children?: React.ReactNode
-	onClick?: () => void
-}
-
-export const MapEditor = ({}: MapEditorProps) => {
-	const { walls, setWalls, commit, undo, redo, reset } = useHistory([])
+export const MapEditor = () => {
+	const { walls, commit, undo, redo } = useHistory([])
 	const [rooms, setRooms] = useState<Room[]>([])
-	const [gridSize, setGridSize] = useState(20)
 	const [thickness, setThickness] = useState(8)
+	const [gridSize, setGridSize] = useState(20)
 	const [tool, setTool] = useState<Tool>('wall')
 	const [view, setView] = useState<ViewBox>({ x: 0, y: 0, w: 1200, h: 800 })
 	const [promptRoomKey, setPromptRoomKey] = useState<string | null>(null)
@@ -49,7 +43,6 @@ export const MapEditor = ({}: MapEditorProps) => {
 	useEffect(() => {
 		getDevices()
 	}, [])
-	console.log(apiData)
 
 	// Recompute rooms when walls change
 	useEffect(() => {
@@ -152,37 +145,6 @@ export const MapEditor = ({}: MapEditorProps) => {
 		document.addEventListener('keydown', onKey)
 		return () => document.removeEventListener('keydown', onKey)
 	}, [undo, redo])
-
-	const exportJson = () => {
-		const data = {
-			gridSize,
-			thickness,
-			walls,
-			rooms: rooms.map(r => ({
-				name: r.name,
-				area: r.area,
-				polygon: r.polygon,
-			})),
-		}
-		download(
-			'apartment.json',
-			JSON.stringify(data, null, 2),
-			'application/json',
-		)
-	}
-
-	const exportSvg = () => {
-		const svg = document.querySelector('svg')
-		if (!svg) return
-		const clone = svg.cloneNode(true) as SVGSVGElement
-		clone.querySelectorAll('[data-wall]').forEach(n => {})
-		const xml = new XMLSerializer().serializeToString(clone)
-		download(
-			'apartment.svg',
-			`<?xml version="1.0" encoding="UTF-8"?>\n${xml}`,
-			'image/svg+xml',
-		)
-	}
 
 	// on resize fit view
 	useEffect(() => {
@@ -292,8 +254,6 @@ export const MapEditor = ({}: MapEditorProps) => {
 				onRedo={handleRedo}
 				onResetView={resetView}
 				onClear={handleClear}
-				onExportSvg={exportSvg}
-				onExportJson={exportJson}
 				rooms={rooms}
 				onRenameRoom={handleRenameRoom}
 				availableDevices={availableDevices}
@@ -313,15 +273,6 @@ export const MapEditor = ({}: MapEditorProps) => {
 			)}
 		</div>
 	)
-}
-
-function download(name: string, content: string, type: string) {
-	const blob = new Blob([content], { type })
-	const a = document.createElement('a')
-	a.href = URL.createObjectURL(blob)
-	a.download = name
-	a.click()
-	setTimeout(() => URL.revokeObjectURL(a.href), 1000)
 }
 
 export default MapEditor

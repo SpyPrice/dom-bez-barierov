@@ -29,6 +29,7 @@
 			"@Constants/*": ["./src/Constants/*"],
 			"@Contexts/*": ["./src/Contexts/*"],
 			"@Hooks/*": ["./src/Hooks/*"],
+			"@Types/*": ["./src/Types/*"],
 			"@Models/*": ["./src/Models/*"],
 			"@Providers/*": ["./src/Providers/*"],
 			"@Schemas/*": ["./src/Schemas/*"],

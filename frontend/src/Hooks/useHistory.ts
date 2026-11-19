@@ -1,5 +1,5 @@
+import type { Wall } from '@Types/mapEditorTypes'
 import { useCallback, useRef, useState } from 'react'
-import type { Wall } from './types'
 
 export function useHistory(initial: Wall[]) {
 	const [walls, setWalls] = useState<Wall[]>(initial)

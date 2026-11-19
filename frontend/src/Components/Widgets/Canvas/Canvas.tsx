@@ -1,10 +1,3 @@
-import { useEffect, useRef, useState } from 'react'
-import {
-	centroid,
-	constrainOrtho,
-	dist,
-	snapPoint,
-} from '../../Pages/MapEditor/geometry'
 import type {
 	PlacedDevice,
 	Point,
@@ -12,7 +5,14 @@ import type {
 	Tool,
 	ViewBox,
 	Wall,
-} from '../../Pages/MapEditor/types'
+} from '@Types/mapEditorTypes'
+import { useEffect, useRef, useState } from 'react'
+import {
+	centroid,
+	constrainOrtho,
+	dist,
+	snapPoint,
+} from '../../../Utils/geometry'
 
 interface Props {
 	walls: Wall[]

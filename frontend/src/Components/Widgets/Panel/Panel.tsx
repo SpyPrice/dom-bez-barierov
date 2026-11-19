@@ -1,6 +1,6 @@
 import type { Device } from '@/Api/yandexApi'
-import type { Room, Tool } from '../../Pages/MapEditor/types'
-import RoomList from '../RoomList/RoomList'
+import RoomList from '@Components/UI/RoomList/RoomList'
+import type { Room, Tool } from '@Types/mapEditorTypes'
 
 interface Props {
 	tool: Tool
@@ -13,8 +13,6 @@ interface Props {
 	onRedo: () => void
 	onResetView: () => void
 	onClear: () => void
-	onExportSvg: () => void
-	onExportJson: () => void
 	rooms: Room[]
 	onRenameRoom: (key: string, name: string) => void
 	availableDevices: Device[] // Устройства, которых еще нет на карте

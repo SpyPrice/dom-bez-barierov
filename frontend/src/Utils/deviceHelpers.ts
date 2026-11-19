@@ -1,17 +1,4 @@
-import type {
-	ApiRoom,
-	Capability,
-	Device,
-} from '@Components/Pages/MapEditor/types'
-
-/**
- * От сюда можно брать методы для получения всей инфы,
- * если чего то нет то сказать мне м я это добавлю
- * Сейчас там функционал сделан только под розетку(как тестовый прибор)
- * Везде указаны описания для каждого метода, некоторые методы возвращают
- * строки которые в теории придется изменить, если что менять их лучше здесь
- * а не брать отсюда и менять дальше
- */
+import type { ApiRoom, Capability, Device } from '@Types/mapEditorTypes'
 
 // 1. ИМЕНА И СТАТУСЫ
 
@@ -124,6 +111,8 @@ function getPropertyLabel(instance: string): string {
 		power: 'Мощность',
 		voltage: 'Напряжение',
 		amperage: 'Сила тока',
+		temperature: 'Температура',
+		battery_level: 'Заряд батареи',
 	}
 	return labels[instance] || instance
 }
@@ -135,6 +124,8 @@ function formatUnit(unit?: string): string {
 	if (unit === 'unit.watt') return 'Вт'
 	if (unit === 'unit.volt') return 'В'
 	if (unit === 'unit.ampere') return 'А'
+	if (unit === 'unit.temperature.celsius') return '°C'
+	if (unit === 'unit.percent') return '%'
 	return unit || ''
 }
 

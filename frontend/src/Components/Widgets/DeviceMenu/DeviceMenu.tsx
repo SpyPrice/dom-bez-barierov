@@ -1,4 +1,5 @@
 import { yandexApi } from '@/Api/yandexApi'
+import type { ApiRoom, PlacedDevice } from '@Types/mapEditorTypes'
 import {
 	getDeviceName,
 	getDeviceRoom,
@@ -6,8 +7,7 @@ import {
 	getDeviceTypeLabel,
 	hasControls,
 	isDeviceOn,
-} from '../../../Utils/MapUtils'
-import type { ApiRoom, PlacedDevice } from '../../Pages/MapEditor/types'
+} from '@Utils/deviceHelpers'
 
 interface Props {
 	device: PlacedDevice
