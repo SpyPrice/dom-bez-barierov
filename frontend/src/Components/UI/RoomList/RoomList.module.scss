@@ -1,3 +1,28 @@
-.container {
-  // Add your styles here
+.empty {
+	color: #999;
+	font-size: 12px;
+}
+
+.row {
+	padding: 4px 0;
+	border-bottom: 1px solid #f0f0f0;
+	display: flex;
+	justify-content: space-between;
+	gap: 6px;
+	align-items: center;
+}
+
+.input {
+	flex: 1;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	padding: 2px 4px;
+	font-size: 12px;
+	width: 100%;
+}
+
+.area {
+	color: #888;
+	font-size: 11px;
+	white-space: nowrap;
 }

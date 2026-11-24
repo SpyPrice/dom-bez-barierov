@@ -1,4 +1,5 @@
 import type { Room } from '@Types/mapEditorTypes'
+import styles from './RoomList.module.scss'
 
 interface Props {
 	rooms: Room[]
@@ -9,7 +10,7 @@ interface Props {
 export const RoomList = ({ rooms, gridSize, onRename }: Props) => {
 	if (!rooms.length) {
 		return (
-			<em style={{ color: '#999', fontSize: 12 }}>
+			<em className={styles.empty}>
 				Замкните контур стен, чтобы появилась комната
 			</em>
 		)
@@ -17,31 +18,14 @@ export const RoomList = ({ rooms, gridSize, onRename }: Props) => {
 	return (
 		<>
 			{rooms.map(room => (
-				<div
-					key={room.key}
-					style={{
-						padding: '4px 0',
-						borderBottom: '1px solid #f0f0f0',
-						display: 'flex',
-						justifyContent: 'space-between',
-						gap: 6,
-						alignItems: 'center',
-					}}
-				>
+				<div key={room.key} className={styles.row}>
 					<input
 						value={room.name ?? ''}
 						placeholder='Без названия'
 						onChange={e => onRename(room.key, e.target.value)}
-						style={{
-							flex: 1,
-							border: '1px solid #ddd',
-							borderRadius: 4,
-							padding: '2px 4px',
-							fontSize: 12,
-							width: '100%',
-						}}
+						className={styles.input}
 					/>
-					<span style={{ color: '#888', fontSize: 11, whiteSpace: 'nowrap' }}>
+					<span className={styles.area}>
 						{(room.area / (gridSize * gridSize)).toFixed(1)} кл²
 					</span>
 				</div>

@@ -74,9 +74,13 @@ export interface Household {
 	type: string
 }
 
-export const yandexApi = {
-	// register: (data: UserCreate) => api.post<TokenWithUser>('/register', data),
+export interface UserRead {
+	yandex_id: string
+	login: string
+	display_name: string
+}
 
+export const yandexApi = {
 	// login: async (username: string, password: string) => {
 	// 	const formData = new URLSearchParams()
 	// 	formData.append('username', username)
@@ -89,7 +93,7 @@ export const yandexApi = {
 	// 	})
 	// },
 
-	userInfo: () => api.get<any>('/api/v1.0/user/info'),
+	userInfo: () => api.get<DevicesResponse>('/api/v1.0/user/info'),
 
 	setCapability: (
 		deviceId: any,

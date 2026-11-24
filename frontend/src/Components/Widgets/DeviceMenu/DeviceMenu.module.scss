@@ -1,3 +1,76 @@
-.container {
-  // Add your styles here
+.overlay {
+	position: fixed;
+	inset: 0;
+	z-index: 10;
+}
+
+.menu {
+	position: absolute;
+	transform: translate(-50%, -110%); // Позиционируем над точкой
+	background: #fff;
+	border: 1px solid #ccc;
+	border-radius: 8px;
+	padding: 12px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	z-index: 20;
+	min-width: 200px;
+	font-family: system-ui, sans-serif;
+}
+
+.header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+}
+
+.name {
+	font-weight: bold;
+	font-size: 14px;
+}
+
+.type {
+	font-size: 12px;
+	color: #888;
+}
+
+.room {
+	font-size: 11px;
+	color: #aaa;
+}
+
+.toggleBtn {
+	border: none;
+	padding: 6px 10px;
+	border-radius: 4px;
+	cursor: pointer;
+	font-weight: bold;
+	font-size: 12px;
+	background: #eee;
+	color: #333;
+
+	&.on {
+		background: #2a7;
+		color: #fff;
+	}
+}
+
+.telemetry {
+	margin-top: 10px;
+	border-top: 1px solid #eee;
+	padding-top: 8px;
+}
+
+.telemetryRow {
+	display: flex;
+	justify-content: space-between;
+	font-size: 12px;
+	margin-bottom: 4px;
+}
+
+.telemetryLabel {
+	color: #666;
+}
+
+.telemetryValue {
+	font-weight: 500;
 }

@@ -13,6 +13,7 @@ import {
 	dist,
 	snapPoint,
 } from '../../../Utils/geometry'
+import styles from './Canvas.module.scss'
 
 interface Props {
 	walls: Wall[]
@@ -286,17 +287,13 @@ export const Canvas = ({
 	const promptRoom = rooms.find(r => r.key === promptRoomKey)
 	const promptCentroid = promptRoom ? centroid(promptRoom.polygon) : null
 
+	const isGrabbing = !!dragDevice || !!pan
+
 	return (
 		<svg
 			ref={svgRef}
 			viewBox={`${view.x} ${view.y} ${view.w} ${view.h}`}
-			style={{
-				flex: 1,
-				background: '#fafafa',
-				touchAction: 'none',
-				cursor: dragDevice ? 'grabbing' : pan ? 'grabbing' : 'crosshair',
-				userSelect: 'none',
-			}}
+			className={`${styles.svg} ${isGrabbing ? styles.grabbing : ''}`}
 			onPointerDown={handlePointerDown}
 			onPointerMove={handlePointerMove}
 			onPointerUp={handlePointerUp}
@@ -332,20 +329,14 @@ export const Canvas = ({
 					const c = centroid(room.polygon)
 					return (
 						<g key={room.key}>
-							<polygon
-								points={pts}
-								fill='rgba(42,119,85,0.08)'
-								pointerEvents='none'
-							/>
+							<polygon points={pts} className={styles.roomPolygon} />
 							{room.name && (
 								<>
 									<text
 										x={c.x}
 										y={c.y}
-										fill='#2a7'
-										textAnchor='middle'
 										fontSize={13 * zoom}
-										pointerEvents='none'
+										className={styles.roomName}
 										onDoubleClick={() =>
 											onRenameRoom(room.key, room.name ?? '')
 										}
@@ -355,10 +346,8 @@ export const Canvas = ({
 									<text
 										x={c.x}
 										y={c.y + 14 * zoom}
-										fill='#888'
-										textAnchor='middle'
+										className={styles.roomArea}
 										fontSize={10 * zoom}
-										pointerEvents='none'
 									>
 										{(room.area / (gridSize * gridSize)).toFixed(1)} кл²
 									</text>
@@ -381,10 +370,8 @@ export const Canvas = ({
 							y1={w.a.y}
 							x2={w.b.x}
 							y2={w.b.y}
-							stroke='#222'
-							strokeLinecap='square'
+							className={styles.wall}
 							strokeWidth={thickness}
-							pointerEvents='stroke'
 							data-wall={JSON.stringify(w)}
 						/>
 					),
@@ -396,8 +383,7 @@ export const Canvas = ({
 							cx={e.x}
 							cy={e.y}
 							r={3 * zoom}
-							fill='#2a7'
-							pointerEvents='none'
+							className={styles.wallNode}
 						/>
 					)),
 				)}
@@ -420,8 +406,7 @@ export const Canvas = ({
 								cx={2 * zoom}
 								cy={2 * zoom}
 								r={10 * zoom}
-								fill='rgba(0,0,0,0.2)'
-								pointerEvents='none'
+								className={styles.deviceShadow}
 							/>
 							{/* Сам кружок */}
 							<circle
@@ -429,20 +414,16 @@ export const Canvas = ({
 								cy={0}
 								r={10 * zoom}
 								fill={color}
-								stroke='#fff'
+								className={styles.deviceCircle}
 								strokeWidth={2 * zoom}
 								data-device-id={dev.id}
-								style={{ cursor: 'pointer' }}
 							/>
 							{/* Буква внутри */}
 							<text
 								x={0}
 								y={4 * zoom}
-								textAnchor='middle'
-								fill='#fff'
 								fontSize={10 * zoom}
-								fontWeight='bold'
-								pointerEvents='none'
+								className={styles.deviceLetter}
 							>
 								{dev.name.charAt(0).toUpperCase()}
 							</text>
@@ -475,15 +456,9 @@ export const Canvas = ({
 						autoFocus
 						placeholder='Название комнаты…'
 						style={{
-							width: '100%',
-							height: '100%',
-							padding: 6,
-							border: '2px solid #2a7',
-							borderRadius: 6,
 							fontSize: 13 * zoom,
-							outline: 'none',
-							boxShadow: '0 2px 8px rgba(0,0,0,.1)',
 						}}
+						className={styles.promptInput}
 						onKeyDown={e => {
 							if (e.key === 'Enter') {
 								const v =
@@ -525,34 +500,23 @@ function Door({ wall }: { wall: Wall }) {
 				y1={wall.a.y}
 				x2={wall.b.x}
 				y2={wall.b.y}
-				stroke='#222'
 				strokeWidth={2}
-				strokeDasharray='4 4'
-				pointerEvents='stroke'
+				className={styles.doorDashed}
 			/>
 			<path
 				d={`M ${tip.x} ${tip.y} A ${len} ${len} 0 0 ${sweep} ${leafEnd.x} ${leafEnd.y}`}
-				fill='none'
-				stroke='#999'
 				strokeWidth={1}
-				pointerEvents='none'
+				className={styles.doorSwing}
 			/>
 			<line
 				x1={hinge.x}
 				y1={hinge.y}
 				x2={leafEnd.x}
 				y2={leafEnd.y}
-				stroke='#222'
 				strokeWidth={2}
-				pointerEvents='none'
+				className={styles.doorLine}
 			/>
-			<circle
-				cx={hinge.x}
-				cy={hinge.y}
-				r={2.5}
-				fill='#222'
-				pointerEvents='none'
-			/>
+			<circle cx={hinge.x} cy={hinge.y} r={2.5} className={styles.doorHinge} />
 		</g>
 	)
 }
@@ -581,11 +545,8 @@ function PreviewLine({
 			y1={a.y}
 			x2={b.x}
 			y2={b.y}
-			stroke='#2a7'
 			strokeWidth={thickness}
-			strokeLinecap='square'
-			opacity={0.55}
-			pointerEvents='none'
+			className={styles.previewLine}
 		/>
 	)
 }

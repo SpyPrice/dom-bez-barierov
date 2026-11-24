@@ -19,8 +19,6 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 export const MapEditor = () => {
 	const { walls, commit, undo, redo } = useHistory([])
 	const [rooms, setRooms] = useState<Room[]>([])
-	const [thickness, setThickness] = useState(8)
-	const [gridSize, setGridSize] = useState(20)
 	const [tool, setTool] = useState<Tool>('wall')
 	const [view, setView] = useState<ViewBox>({ x: 0, y: 0, w: 1200, h: 800 })
 	const [promptRoomKey, setPromptRoomKey] = useState<string | null>(null)
@@ -37,6 +35,47 @@ export const MapEditor = () => {
 
 	const getDevices = async () => {
 		const data: any = await yandexApi.userInfo()
+		data.devices.push({
+			id: 'test',
+			name: 'Датчик температуры',
+			type: 'devices.types.sensor.climate',
+			capabilities: [],
+			properties: [
+				{
+					type: 'devices.properties.float',
+					reportable: true,
+					retrievable: true,
+					parameters: {
+						instance: 'temperature',
+						unit: 'unit.temperature.celsius',
+					},
+					state: {
+						instance: 'temperature',
+						value: 25,
+					},
+					last_updated: 1795521298.622,
+				},
+				{
+					type: 'devices.properties.float',
+					reportable: true,
+					retrievable: true,
+					parameters: {
+						instance: 'humidity',
+						unit: 'unit.percent',
+					},
+					state: {
+						instance: 'humidity',
+						value: 21,
+					},
+					last_updated: 1795521298.622,
+				},
+			],
+			device_info: {
+				manufacturer: 'Eltex',
+				model: 'SW_PLG_01',
+			},
+		})
+
 		setApiData(data)
 	}
 
@@ -178,7 +217,7 @@ export const MapEditor = () => {
 		setSelectedDevice({ device, x, y })
 	}
 
-	// Переключение состояния (Имитация отправки на бэкенд)
+	// Переключение состояния
 	const handleToggleDevice = (id: string) => {
 		setPlacedDevices(prev =>
 			prev.map(d => {
@@ -229,8 +268,8 @@ export const MapEditor = () => {
 				walls={walls}
 				rooms={rooms}
 				tool={tool}
-				gridSize={gridSize}
-				thickness={thickness}
+				gridSize={20}
+				thickness={8}
 				view={view}
 				setView={setView}
 				onAddWall={handleAddWall}
@@ -246,10 +285,6 @@ export const MapEditor = () => {
 			<Panel
 				tool={tool}
 				setTool={setTool}
-				gridSize={gridSize}
-				setGridSize={setGridSize}
-				thickness={thickness}
-				setThickness={setThickness}
 				onUndo={handleUndo}
 				onRedo={handleRedo}
 				onResetView={resetView}

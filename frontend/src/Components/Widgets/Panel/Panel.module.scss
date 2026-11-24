@@ -1,3 +1,81 @@
-.container {
-  // Add your styles here
+.panel {
+	width: 240px;
+	padding: 14px;
+	border-left: 1px solid #e0e0e0;
+	background: #fff;
+	overflow-y: auto;
+}
+
+.sectionTitle {
+	margin: 0 0 10px;
+	font-size: 15px;
+
+	&:not(:first-child) {
+		margin-top: 16px;
+	}
+}
+
+.toolGroup {
+	display: flex;
+	gap: 6px;
+	margin-bottom: 10px;
+}
+
+.btn {
+	width: 100%;
+	padding: 8px;
+	margin: 4px 0;
+	border: 1px solid #ccc;
+	background: #f6f6f6;
+	border-radius: 6px;
+	cursor: pointer;
+	font-size: 13px;
+}
+
+.toolBtn {
+	flex: 1;
+	padding: 8px;
+	border: 1px solid #ccc;
+	border-radius: 6px;
+	background: #fff;
+	color: #000;
+	cursor: pointer;
+	font-size: 13px;
+
+	&.active {
+		border-color: #2a7;
+		background: #2a7;
+		color: #fff;
+	}
+}
+
+.devicesList {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	margin-bottom: 20px;
+}
+
+.noDevices {
+	font-size: 12px;
+	color: #888;
+}
+
+.deviceBtn {
+	padding: 8px;
+	text-align: left;
+	background: #fff;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	cursor: pointer;
+}
+
+.deviceName {
+	font-weight: bold;
+	font-size: 12px;
+}
+
+.roomsWrapper {
+	font-size: 13px;
+	margin-top: 8px;
 }

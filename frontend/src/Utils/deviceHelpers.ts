@@ -46,6 +46,8 @@ export function getDeviceStatus(device: Device): string {
  * Проверяет, включено ли устройство прямо сейчас
  */
 export function isDeviceOn(device: Device): boolean | null {
+	if (!device.capabilities) return null
+
 	const cap = device.capabilities.find(
 		c => c.type === 'devices.capabilities.on_off',
 	)
@@ -61,13 +63,18 @@ export function isDeviceOn(device: Device): boolean | null {
  * Проверяет, можно ли вообще управлять конкретным умением
  */
 export function isCapabilityEditable(capability: Capability): boolean {
-	return capability.state !== null && capability.state.value !== undefined
+	return (
+		capability.state !== null &&
+		capability.state !== undefined &&
+		capability.state.value !== undefined
+	)
 }
 
 /**
  * Возвращает умений, которые можно менять
  */
 export function getEditableCapabilities(device: Device): Capability[] {
+	if (!device.capabilities) return []
 	return device.capabilities.filter(isCapabilityEditable)
 }
 
@@ -113,6 +120,12 @@ function getPropertyLabel(instance: string): string {
 		amperage: 'Сила тока',
 		temperature: 'Температура',
 		battery_level: 'Заряд батареи',
+		humidity: 'Влажность',
+		pressure: 'Давление',
+		co2_level: 'Уровень CO₂',
+		'pm2.5_density': 'Частицы PM2.5',
+		pm10_density: 'Частицы PM10',
+		illumination: 'Освещённость',
 	}
 	return labels[instance] || instance
 }
