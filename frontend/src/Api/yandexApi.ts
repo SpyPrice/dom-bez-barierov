@@ -75,23 +75,31 @@ export interface Household {
 }
 
 export interface UserRead {
-	yandex_id: string
+	id: string
+	client_id: string
 	login: string
 	display_name: string
+	first_name: string
+	last_name: string
+	real_name: string
+	sex: string
+	psuid: string
 }
 
 export const yandexApi = {
-	// login: async (username: string, password: string) => {
-	// 	const formData = new URLSearchParams()
-	// 	formData.append('username', username)
-	// 	formData.append('password', password)
+	getYandexAuthUrl: () => {
+		const clientId = import.meta.env.VITE_YANDEX_CLIENT_ID
+		const redirectUri = encodeURIComponent(import.meta.env.VITE_REDIRECT_URI)
+		return `https://oauth.yandex.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}`
+	},
 
-	// 	return api.post<Token>('/login', formData, {
-	// 		headers: {
-	// 			'Content-Type': 'application/x-www-form-urlencoded',
-	// 		},
-	// 	})
-	// },
+	loginWithYandex: async (code: string) => {
+		return api.post('/auth/yandex', { code })
+	},
+
+	getMe: async (): Promise<UserRead> => {
+		return api.get('/getUser')
+	},
 
 	userInfo: () => api.get<DevicesResponse>('/api/v1.0/user/info'),
 

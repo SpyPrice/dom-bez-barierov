@@ -1,5 +1,6 @@
 import { yandexApi } from '@/Api/yandexApi'
 import Canvas from '@/Components/Widgets/Canvas'
+import DebugPanel from '@/Components/Widgets/DebugPanel'
 import DeviceMenu from '@/Components/Widgets/DeviceMenu'
 import Panel from '@/Components/Widgets/Panel'
 import { useHistory } from '@/Hooks/useHistory'
@@ -306,6 +307,8 @@ export const MapEditor = () => {
 					onToggle={handleToggleDevice}
 				/>
 			)}
+
+			<DebugPanel />
 		</div>
 	)
 }

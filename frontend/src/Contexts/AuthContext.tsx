@@ -6,7 +6,8 @@ interface AuthContextType {
 	user: UserRead | null
 	isLoading: boolean
 	isAuthenticated: boolean
-	login: (email: string, password: string) => Promise<void>
+	loginWithYandex: () => void
+	setUserAfterLogin: (user: UserRead) => void
 	logout: () => void
 }
 
@@ -17,40 +18,30 @@ export const AuthProvider = ({ children }: { children: any }) => {
 	const [isLoading, setIsLoading] = useState(true)
 
 	useEffect(() => {
+		const checkAuth = async () => {
+			const token = localStorage.getItem('access_token')
+			if (token) {
+				try {
+					const userData = await yandexApi.getMe()
+					setUser(userData)
+				} catch (error) {
+					localStorage.removeItem('access_token')
+					console.error('Auth check failed:', error)
+				}
+			}
+			setIsLoading(false)
+		}
+
 		checkAuth()
 	}, [])
 
-	const checkAuth = async () => {
-		const token = localStorage.getItem('access_token')
-		if (token) {
-			try {
-				const userData: any = await yandexApi.getMe()
-				setUser(userData)
-			} catch (error) {
-				localStorage.removeItem('access_token')
-				console.error('Auth check failed:', error)
-			}
-		}
-		setIsLoading(false)
+	const loginWithYandex = () => {
+		const url = yandexApi.getYandexAuthUrl()
+		window.location.href = url
 	}
 
-	const login = async (email: string, password: string) => {
-		try {
-			const response: any = await yandexApi.login(email, password)
-
-			localStorage.setItem('access_token', response.access_token)
-
-			const userData: any = await yandexApi.getMe()
-			setUser(userData)
-
-			toast.success('Успешный вход!')
-		} catch (error: any) {
-			if (error.toJSON().message === 'Network Error') return
-			toast.error(
-				error.response?.data?.detail || 'Неправильный логин или пароль!',
-			)
-			throw error
-		}
+	const setUserAfterLogin = (userData: UserRead) => {
+		setUser(userData)
 	}
 
 	const logout = () => {
@@ -65,7 +56,8 @@ export const AuthProvider = ({ children }: { children: any }) => {
 				user,
 				isLoading,
 				isAuthenticated: !!user,
-				login,
+				loginWithYandex,
+				setUserAfterLogin,
 				logout,
 			}}
 		>

@@ -11,7 +11,7 @@ const api = axios.create({
 
 api.interceptors.request.use(
 	config => {
-		const token = import.meta.env.VITE_TOKEN
+		const token = localStorage.getItem('access_token')
 		if (token) {
 			config.headers.Authorization = `Bearer ${token}`
 		}
@@ -26,11 +26,13 @@ api.interceptors.response.use(
 	response => response.data,
 	error => {
 		if (error.toJSON().message === 'Network Error') {
-			toast.error('Нет соединения с прокси-сервером! Попробуйе позже')
+			toast.error('Нет соединения с сервером! Попробуйе позже')
 		}
 		if (error.response?.status === 401) {
 			localStorage.removeItem('access_token')
-			window.location.href = '/login'
+			if (window.location.pathname !== '/login') {
+				window.location.href = '/login'
+			}
 		}
 		return Promise.reject(error)
 	},
