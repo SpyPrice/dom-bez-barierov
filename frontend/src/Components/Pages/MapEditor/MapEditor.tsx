@@ -16,6 +16,7 @@ import type {
 } from '@Types/mapEditorTypes'
 import { addWallToState, rebuildRooms } from '@Utils/geometry'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { debugTemp } from './debugDevices'
 
 export const MapEditor = () => {
 	const { walls, commit, undo, redo } = useHistory([])
@@ -31,51 +32,21 @@ export const MapEditor = () => {
 		x: number
 		y: number
 	} | null>(null)
+	const [debugDevices, setDebugDevices] = useState<Record<string, boolean>>({
+		debugTemp: false,
+		debugMotion: false,
+	})
+	const DEBUG_DEVICES: Record<string, Device> = {
+		debugTemp,
+		// debugMotion,
+	}
 
 	const prevRoomsRef = useRef<Room[]>([])
 
 	const getDevices = async () => {
 		const data: any = await yandexApi.userInfo()
-		data.devices.push({
-			id: 'test',
-			name: 'Датчик температуры',
-			type: 'devices.types.sensor.climate',
-			capabilities: [],
-			properties: [
-				{
-					type: 'devices.properties.float',
-					reportable: true,
-					retrievable: true,
-					parameters: {
-						instance: 'temperature',
-						unit: 'unit.temperature.celsius',
-					},
-					state: {
-						instance: 'temperature',
-						value: 25,
-					},
-					last_updated: 1795521298.622,
-				},
-				{
-					type: 'devices.properties.float',
-					reportable: true,
-					retrievable: true,
-					parameters: {
-						instance: 'humidity',
-						unit: 'unit.percent',
-					},
-					state: {
-						instance: 'humidity',
-						value: 21,
-					},
-					last_updated: 1795521298.622,
-				},
-			],
-			device_info: {
-				manufacturer: 'Eltex',
-				model: 'SW_PLG_01',
-			},
-		})
+		debugDevices.debugTemp
+		data.devices.push()
 
 		setApiData(data)
 	}
@@ -83,6 +54,26 @@ export const MapEditor = () => {
 	useEffect(() => {
 		getDevices()
 	}, [])
+
+	useEffect(() => {
+		setApiData(prev => {
+			if (!prev) return prev
+
+			const debugIds = Object.keys(DEBUG_DEVICES)
+
+			const devices = prev.devices.filter(
+				(d: Device) => !debugIds.some(key => d.id === DEBUG_DEVICES[key].id),
+			)
+
+			for (const key of debugIds) {
+				if (debugDevices[key]) {
+					devices.push(DEBUG_DEVICES[key])
+				}
+			}
+
+			return { ...prev, devices }
+		})
+	}, [debugDevices])
 
 	// Recompute rooms when walls change
 	useEffect(() => {
@@ -308,7 +299,10 @@ export const MapEditor = () => {
 				/>
 			)}
 
-			<DebugPanel />
+			<DebugPanel
+				setDebugDevices={setDebugDevices}
+				debugDevices={debugDevices}
+			/>
 		</div>
 	)
 }
