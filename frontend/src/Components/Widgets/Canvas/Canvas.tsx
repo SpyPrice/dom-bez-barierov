@@ -1,3 +1,4 @@
+import { formatArea } from '@/Utils/units'
 import type {
 	PlacedDevice,
 	Point,
@@ -511,7 +512,6 @@ export const Canvas = ({
 	}, [])
 
 	const promptRoom = rooms.find(r => r.key === promptRoomKey)
-	const promptCentroid = promptRoom ? centroid(promptRoom.polygon) : null
 
 	const isGrabbing = !!dragDevice || !!pan
 
@@ -583,7 +583,7 @@ export const Canvas = ({
 												fontSize={10 * zoom}
 												pointerEvents='none' // чтобы не мешать клику/драгу по имени
 											>
-												{(room.area / (gridSize * gridSize)).toFixed(1)} кл²
+												{formatArea(room.area)}
 											</text>
 										</>
 									)

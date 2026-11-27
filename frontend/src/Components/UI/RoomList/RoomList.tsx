@@ -1,3 +1,4 @@
+import { formatArea } from '@/Utils/units'
 import type { Room } from '@Types/mapEditorTypes'
 import styles from './RoomList.module.scss'
 
@@ -25,9 +26,7 @@ export const RoomList = ({ rooms, gridSize, onRename }: Props) => {
 						onChange={e => onRename(room.key, e.target.value)}
 						className={styles.input}
 					/>
-					<span className={styles.area}>
-						{(room.area / (gridSize * gridSize)).toFixed(1)} кл²
-					</span>
+					<span className={styles.area}>{formatArea(room.area)}</span>
 				</div>
 			))}
 		</>
