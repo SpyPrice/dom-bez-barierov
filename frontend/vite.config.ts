@@ -3,12 +3,18 @@ import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import path from 'path'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import svgr from 'vite-plugin-svgr'
 
 // https://vite.dev/config/
 export default defineConfig({
 	plugins: [
 		react(),
 		babel({ presets: [reactCompilerPreset()] }),
+		svgr({
+			svgrOptions: {
+				icon: true,
+			},
+		}),
 		VitePWA({
 			registerType: 'autoUpdate',
 			includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],

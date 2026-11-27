@@ -1,3 +1,5 @@
+import LogoIcon from '@/Assets/Logo.svg?react'
+import YaIDIcon from '@/Assets/YaID.svg?react'
 import { useAuth } from '@/Contexts/AuthContext'
 import styles from './Login.module.scss'
 
@@ -6,21 +8,11 @@ export const Login = () => {
 
 	return (
 		<div className={styles.loginPage}>
-			<div className='login-page__card'>
-				<h1 className='login-page__title'>Мнемосхема дома</h1>
-				<p className='login-page__subtitle'>
-					Войдите, чтобы управлять устройствами
-				</p>
-				<button
-					className='login-page__btn'
-					onClick={loginWithYandex}
-					type='button'
-				>
-					<span className='login-page__btn-logo' aria-hidden='true'>
-						Я
-					</span>
-					Войти через Яндекс
-				</button>
+			<div className={styles.card}>
+				<LogoIcon className={styles.logo} />
+				<p className={styles.title}>Войти в свой дом без барьеров через</p>
+
+				<YaIDIcon className={styles.loginButton} onClick={loginWithYandex} />
 			</div>
 		</div>
 	)

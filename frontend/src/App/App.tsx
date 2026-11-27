@@ -1,3 +1,4 @@
+import GeneralLayout from '@/Components/Layouts/GeneralLayout'
 import ProtectedRoute from '@/Components/Layouts/ProtectedRoute'
 import AuthCallback from '@/Components/Pages/AuthCallback'
 import Login from '@/Components/Pages/Login'
@@ -14,18 +15,20 @@ function App() {
 			<BrowserRouter>
 				<AuthProvider>
 					<Routes>
-						<Route path='/login' element={<Login />} />
-						<Route path='/auth/callback' element={<AuthCallback />} />
-						<Route path='*' element={<NotFound />} />
+						<Route element={<GeneralLayout />}>
+							<Route path='/login' element={<Login />} />
+							<Route path='*' element={<NotFound />} />
 
-						<Route
-							path='/'
-							element={
-								<ProtectedRoute>
-									<MapEditor />
-								</ProtectedRoute>
-							}
-						/>
+							<Route
+								path='/'
+								element={
+									<ProtectedRoute>
+										<MapEditor />
+									</ProtectedRoute>
+								}
+							/>
+						</Route>
+						<Route path='/auth/callback' element={<AuthCallback />} />
 					</Routes>
 				</AuthProvider>
 			</BrowserRouter>
