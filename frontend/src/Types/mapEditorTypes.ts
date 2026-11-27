@@ -16,6 +16,7 @@ export interface Room {
 	polygon: Point[]
 	area: number
 	name: string | null
+	nameOffset?: Point
 }
 
 export type Tool = 'wall' | 'door' | 'eraser'

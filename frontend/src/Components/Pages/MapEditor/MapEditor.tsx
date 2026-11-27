@@ -107,6 +107,15 @@ export const MapEditor = () => {
 		)
 	}, [])
 
+	const handleMoveRoomName = useCallback((key: string, offset: Point) => {
+		setRooms(prev =>
+			prev.map(r => (r.key === key ? { ...r, nameOffset: offset } : r)),
+		)
+		prevRoomsRef.current = prevRoomsRef.current.map(r =>
+			r.key === key ? { ...r, nameOffset: offset } : r,
+		)
+	}, [])
+
 	const handleUndo = () => {
 		undo()
 	}
@@ -267,12 +276,14 @@ export const MapEditor = () => {
 				onAddWall={handleAddWall}
 				onDeleteWall={handleDeleteWall}
 				onRenameRoom={handleRenameRoom}
+				onStartRename={key => setPromptRoomKey(key)}
 				promptRoomKey={promptRoomKey}
 				onPromptDone={() => setPromptRoomKey(null)}
 				onZoom={() => {}}
 				devices={placedDevices}
 				onDeviceMove={handleDeviceMove}
 				onDeviceClick={handleDeviceClick}
+				onMoveRoomName={handleMoveRoomName}
 			/>
 			<Panel
 				tool={tool}

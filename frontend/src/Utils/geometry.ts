@@ -22,22 +22,62 @@ export function constrainOrtho(a: Point, b: Point): Point {
 		: { x: a.x, y: b.y }
 }
 
-export function segIntersect(
+// export function segIntersect(
+// 	a: Point,
+// 	b: Point,
+// 	c: Point,
+// 	d: Point,
+// ): Point | null {
+// 	const d1 = (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)
+// 	const d2 = (b.x - a.x) * (d.y - a.y) - (b.y - a.y) * (d.x - a.x)
+// 	const d3 = (d.x - c.x) * (a.y - c.y) - (d.y - c.y) * (a.x - c.x)
+// 	const d4 = (d.x - c.x) * (b.y - c.y) - (d.y - c.y) * (b.x - c.x)
+// 	if (
+// 		((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) &&
+// 		((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0))
+// 	) {
+// 		const t = d1 / (d1 - d2)
+// 		return { x: c.x + (d.x - c.x) * t, y: c.y + (d.y - c.y) * t }
+// 	}
+// 	return null
+// }
+
+export function segIntersectOrTouch(
 	a: Point,
 	b: Point,
 	c: Point,
 	d: Point,
 ): Point | null {
-	const d1 = (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)
-	const d2 = (b.x - a.x) * (d.y - a.y) - (b.y - a.y) * (d.x - a.x)
-	const d3 = (d.x - c.x) * (a.y - c.y) - (d.y - c.y) * (a.x - c.x)
-	const d4 = (d.x - c.x) * (b.y - c.y) - (d.y - c.y) * (b.x - c.x)
-	if (
-		((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) &&
-		((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0))
-	) {
-		const t = d1 / (d1 - d2)
-		return { x: c.x + (d.x - c.x) * t, y: c.y + (d.y - c.y) * t }
+	const r = { x: b.x - a.x, y: b.y - a.y }
+	const s = { x: d.x - c.x, y: d.y - c.y }
+	const denom = r.x * s.y - r.y * s.x
+	const qp = { x: c.x - a.x, y: c.y - a.y }
+	const EPS = 1e-6
+
+	// Параллельные / коллинеарные
+	if (Math.abs(denom) < EPS) {
+		const cross = qp.x * r.y - qp.y * r.x
+		if (Math.abs(cross) > EPS) return null
+
+		// Коллинеарны: проверяем перекрытие вдоль r
+		const rr = r.x * r.x + r.y * r.y
+		if (rr < EPS) return null // вырожденный AB
+		const t0 = (qp.x * r.x + qp.y * r.y) / rr
+		const t1 = t0 + (s.x * r.x + s.y * r.y) / rr
+		const lo = Math.max(0, Math.min(t0, t1))
+		const hi = Math.min(1, Math.max(t0, t1))
+		if (hi < lo - EPS) return null
+		// Возвращаем начало перекрытия (по нему разрежем)
+		const t = lo
+		return { x: a.x + r.x * t, y: a.y + r.y * t }
+	}
+
+	// Непараллельные
+	const t = (qp.x * s.y - qp.y * s.x) / denom
+	const u = (qp.x * r.y - qp.y * r.x) / denom
+	// Включаем концы (T-стык, касание в вершине)
+	if (t >= -EPS && t <= 1 + EPS && u >= -EPS && u <= 1 + EPS) {
+		return { x: a.x + r.x * t, y: a.y + r.y * t }
 	}
 	return null
 }
@@ -151,7 +191,13 @@ export function rebuildRooms(walls: Wall[], prevRooms: Room[]): Room[] {
 		if (area <= 1) continue
 		const key = faceKey(f)
 		const prev = prevByKey.get(key)
-		next.push({ key, polygon: f, area, name: prev?.name ?? null })
+		next.push({
+			key,
+			polygon: f,
+			area,
+			name: prev?.name ?? 'Назовите комнату',
+			nameOffset: prev?.nameOffset ?? { x: 0, y: 0 },
+		})
 	}
 	return next
 }
@@ -166,7 +212,7 @@ export function addWallToState(
 
 	const cuts: { point: Point; wall: Wall }[] = []
 	for (const w of walls) {
-		const x = segIntersect(a, b, w.a, w.b)
+		const x = segIntersectOrTouch(a, b, w.a, w.b)
 		if (x) cuts.push({ point: x, wall: w })
 	}
 
@@ -196,4 +242,55 @@ export function addWallToState(
 		}
 	}
 	return next
+}
+
+export function pointInPolygon(p: Point, poly: Point[]): boolean {
+	let inside = false
+	for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+		const xi = poly[i].x,
+			yi = poly[i].y
+		const xj = poly[j].x,
+			yj = poly[j].y
+		const intersect =
+			yi > p.y !== yj > p.y && p.x < ((xj - xi) * (p.y - yi)) / (yj - yi) + xi
+		if (intersect) inside = !inside
+	}
+	return inside
+}
+
+export function clampPointToPolygon(p: Point, poly: Point[]): Point {
+	if (pointInPolygon(p, poly)) return p
+
+	// ближайшая точка на рёбрах
+	let best: Point = poly[0]
+	let bestD = Infinity
+	for (let i = 0; i < poly.length; i++) {
+		const a = poly[i]
+		const b = poly[(i + 1) % poly.length]
+		const q = closestPointOnSegment(p, a, b)
+		const d = dist(p, q)
+		if (d < bestD) {
+			bestD = d
+			best = q
+		}
+	}
+
+	const c = centroid(poly)
+	const dx = c.x - best.x
+	const dy = c.y - best.y
+	const len = Math.hypot(dx, dy) || 1
+	const inset = 2
+	return { x: best.x + (dx / len) * inset, y: best.y + (dy / len) * inset }
+}
+
+function closestPointOnSegment(p: Point, a: Point, b: Point): Point {
+	const abx = b.x - a.x
+	const aby = b.y - a.y
+	const apx = p.x - a.x
+	const apy = p.y - a.y
+	const ab2 = abx * abx + aby * aby
+	if (ab2 === 0) return { ...a }
+	let t = (apx * abx + apy * aby) / ab2
+	t = Math.max(0, Math.min(1, t))
+	return { x: a.x + abx * t, y: a.y + aby * t }
 }

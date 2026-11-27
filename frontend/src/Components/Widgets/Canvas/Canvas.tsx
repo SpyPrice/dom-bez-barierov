@@ -9,6 +9,7 @@ import type {
 import { useEffect, useRef, useState } from 'react'
 import {
 	centroid,
+	clampPointToPolygon,
 	constrainOrtho,
 	dist,
 	snapPoint,
@@ -26,11 +27,13 @@ interface Props {
 	onAddWall: (a: Point, b: Point, type: 'wall' | 'door') => void
 	onDeleteWall: (w: Wall) => void
 	onRenameRoom: (key: string, name: string) => void
+	onStartRename: (key: string) => void
 	promptRoomKey: string | null
 	onPromptDone: () => void
 	onZoom: (factor: number) => void
 	devices: PlacedDevice[]
 	onDeviceMove: (id: string, pos: Point) => void
+	onMoveRoomName: (key: string, offset: Point) => void
 	onDeviceClick: (
 		device: PlacedDevice,
 		screenX: number,
@@ -49,12 +52,14 @@ export const Canvas = ({
 	onAddWall,
 	onDeleteWall,
 	onRenameRoom,
+	onStartRename,
 	promptRoomKey,
 	onPromptDone,
 	onZoom,
 	devices,
 	onDeviceMove,
 	onDeviceClick,
+	onMoveRoomName,
 }: Props) => {
 	const svgRef = useRef<SVGSVGElement>(null)
 	const erasing = useRef(false)
@@ -97,6 +102,15 @@ export const Canvas = ({
 		x: number
 		y: number
 		view: ViewBox
+	} | null>(null)
+
+	// Перетаскивание имени комнаты
+	const [dragName, setDragName] = useState<{
+		key: string
+		offset: Point
+		startOffset: Point
+		sx: number
+		sy: number
 	} | null>(null)
 
 	// Обновляем масштаб при изменении view или ресайзе окна
@@ -168,6 +182,7 @@ export const Canvas = ({
 		setDrag(null)
 		setDragDevice(null)
 		setPan(null)
+		setDragName(null)
 		erasing.current = false
 	}
 
@@ -198,7 +213,33 @@ export const Canvas = ({
 		// Если уже идёт pinch - игнорируем нажатия
 		if (pinch.current) return
 
-		// 1. Проверяем, кликнули ли мы на устройство
+		// 1. Перетаскивание названия комнаты
+		const nameNode = (e.target as Element).closest('[data-room-name]')
+		if (nameNode && (e.button === 0 || e.pointerType === 'touch')) {
+			const key = nameNode.getAttribute('data-room-name')!
+			const room = rooms.find(r => r.key === key)
+			if (room) {
+				const c = centroid(room.polygon)
+				const baseOffset = room.nameOffset ?? { x: 0, y: 0 }
+				const worldP = toWorld(e)
+				// позиция имени в мире: centroid + offset
+				const namePos = { x: c.x + baseOffset.x, y: c.y + baseOffset.y }
+				setDragName({
+					key,
+					offset: {
+						x: worldP.x - namePos.x,
+						y: worldP.y - namePos.y,
+					},
+					startOffset: baseOffset,
+					sx: e.clientX,
+					sy: e.clientY,
+				})
+				svgRef.current!.setPointerCapture(e.pointerId)
+				return
+			}
+		}
+
+		// 2. Проверяем, кликнули ли мы на устройство
 		const deviceNode = (e.target as Element).closest('[data-device-id]')
 		if (deviceNode && (e.button === 0 || e.pointerType === 'touch')) {
 			const id = deviceNode.getAttribute('data-device-id')!
@@ -219,7 +260,7 @@ export const Canvas = ({
 			}
 		}
 
-		// 2. Панорамирование
+		// 3. Панорамирование
 		if (e.button === 1) {
 			e.preventDefault()
 			setPan({ x: e.clientX, y: e.clientY, view: { ...view } })
@@ -227,7 +268,7 @@ export const Canvas = ({
 			return
 		}
 
-		// 3. Ластик
+		// 4. Ластик
 		if (tool === 'eraser') {
 			if (e.button !== 0 && e.pointerType !== 'touch') return
 			erasing.current = true
@@ -236,7 +277,7 @@ export const Canvas = ({
 			return
 		}
 
-		// 4. Рисование стен/дверей
+		// 5. Рисование стен/дверей
 		if (e.button !== 0 && e.pointerType !== 'touch') return
 		// Не рисуем дверь/стену, если tool некорректный
 		if (tool !== 'wall' && tool !== 'door') return
@@ -293,6 +334,25 @@ export const Canvas = ({
 			return
 		}
 
+		// Перетаскивание имени комнаты
+		if (dragName) {
+			const p = toWorld(e)
+			const room = rooms.find(r => r.key === dragName.key)
+			if (!room) return
+			const c = centroid(room.polygon)
+
+			// желаемая абсолютная позиция имени
+			let newPos = { x: p.x - dragName.offset.x, y: p.y - dragName.offset.y }
+
+			// не выпускаем за пределы комнаты
+			newPos = clampPointToPolygon(newPos, room.polygon)
+
+			// переводим в смещение от центроида
+			const newOffset = { x: newPos.x - c.x, y: newPos.y - c.y }
+			onMoveRoomName(dragName.key, newOffset)
+			return
+		}
+
 		// Перетаскивание устройства
 		if (dragDevice) {
 			const p = toWorld(e)
@@ -329,6 +389,20 @@ export const Canvas = ({
 		if (pinch.current && pointers.current.size < 2) {
 			pinch.current = null
 			twoFingerPan.current = null
+			return
+		}
+
+		// Отпускание имени комнаты
+		if (dragName) {
+			const moved =
+				Math.hypot(e.clientX - dragName.sx, e.clientY - dragName.sy) > 4
+			if (!moved) {
+				// Это клик — открываем ввод имени
+				onStartRename(dragName.key)
+				const room = rooms.find(r => r.key === dragName.key)
+				if (room) onRenameRoom(room.key, room.name ?? '')
+			}
+			setDragName(null)
 			return
 		}
 
@@ -381,6 +455,7 @@ export const Canvas = ({
 			twoFingerPan.current = null
 		}
 		erasing.current = false
+		setDragName(null)
 	}
 
 	const handleContextMenu = (e: React.MouseEvent<SVGSVGElement>) => {
@@ -428,6 +503,7 @@ export const Canvas = ({
 			if (e.key === 'Escape') {
 				setDrag(null)
 				setDragDevice(null)
+				setDragName(null)
 			}
 		}
 		document.addEventListener('keydown', onKey)
@@ -482,29 +558,36 @@ export const Canvas = ({
 					return (
 						<g key={room.key}>
 							<polygon points={pts} className={styles.roomPolygon} />
-							{room.name && (
-								<>
-									<text
-										x={c.x}
-										y={c.y}
-										fontSize={13 * zoom}
-										className={styles.roomName}
-										onDoubleClick={() =>
-											onRenameRoom(room.key, room.name ?? '')
-										}
-									>
-										{room.name}
-									</text>
-									<text
-										x={c.x}
-										y={c.y + 14 * zoom}
-										className={styles.roomArea}
-										fontSize={10 * zoom}
-									>
-										{(room.area / (gridSize * gridSize)).toFixed(1)} кл²
-									</text>
-								</>
-							)}
+							{room.name &&
+								(() => {
+									const c = centroid(room.polygon)
+									const off = room.nameOffset ?? { x: 0, y: 0 }
+									const nx = c.x + off.x
+									const ny = c.y + off.y
+									return (
+										<>
+											<text
+												x={nx}
+												y={ny}
+												fontSize={13 * zoom}
+												className={styles.roomName}
+												data-room-name={room.key}
+												style={{ cursor: 'move', userSelect: 'none' }}
+											>
+												{room.name}
+											</text>
+											<text
+												x={nx}
+												y={ny + 14 * zoom}
+												className={styles.roomArea}
+												fontSize={10 * zoom}
+												pointerEvents='none' // чтобы не мешать клику/драгу по имени
+											>
+												{(room.area / (gridSize * gridSize)).toFixed(1)} кл²
+											</text>
+										</>
+									)
+								})()}
 						</g>
 					)
 				})}
@@ -597,35 +680,42 @@ export const Canvas = ({
 			</g>
 
 			{/* name prompt */}
-			{promptRoom && promptCentroid && (
-				<foreignObject
-					x={promptCentroid.x - 90 * zoom}
-					y={promptCentroid.y - 16 * zoom}
-					width={180 * zoom}
-					height={34 * zoom}
-				>
-					<input
-						autoFocus
-						placeholder='Название комнаты…'
-						style={{
-							fontSize: 13 * zoom,
-						}}
-						className={styles.promptInput}
-						onKeyDown={e => {
-							if (e.key === 'Enter') {
-								const v =
-									(e.target as HTMLInputElement).value.trim() || 'Комната'
-								onRenameRoom(promptRoom.key, v)
-								onPromptDone()
-							} else if (e.key === 'Escape') {
-								onRenameRoom(promptRoom.key, 'Комната')
-								onPromptDone()
-							}
-						}}
-						onBlur={onPromptDone}
-					/>
-				</foreignObject>
-			)}
+			{promptRoom &&
+				(() => {
+					const c = centroid(promptRoom.polygon)
+					const off = promptRoom.nameOffset ?? { x: 0, y: 0 }
+					const nx = c.x + off.x
+					const ny = c.y + off.y
+					return (
+						<foreignObject
+							x={nx - 90 * zoom}
+							y={ny - 16 * zoom}
+							width={180 * zoom}
+							height={34 * zoom}
+						>
+							<input
+								autoFocus
+								placeholder='Название комнаты…'
+								style={{
+									fontSize: 13 * zoom,
+								}}
+								className={styles.promptInput}
+								onKeyDown={e => {
+									if (e.key === 'Enter') {
+										const v =
+											(e.target as HTMLInputElement).value.trim() || 'Комната'
+										onRenameRoom(promptRoom.key, v)
+										onPromptDone()
+									} else if (e.key === 'Escape') {
+										onRenameRoom(promptRoom.key, 'Комната')
+										onPromptDone()
+									}
+								}}
+								onBlur={onPromptDone}
+							/>
+						</foreignObject>
+					)
+				})()}
 		</svg>
 	)
 }
