@@ -1,0 +1,52 @@
+.houseSpinner {
+	display: block;
+	will-change: transform;
+}
+
+.houseSpinner__bg {
+	transform-origin: 105px 105px;
+	animation: house-spinner-bg-pulse 1.8s ease-in-out infinite;
+}
+
+.houseSpinner__house {
+	stroke-dasharray: 1000;
+	stroke-dashoffset: 1000;
+	animation: house-spinner-draw 2.2s ease-in-out infinite;
+}
+
+@keyframes house-spinner-draw {
+	0% {
+		stroke-dashoffset: 1000;
+	}
+	55% {
+		stroke-dashoffset: 0;
+	}
+	80% {
+		stroke-dashoffset: 0;
+		opacity: 1;
+	}
+	100% {
+		stroke-dashoffset: 0;
+		opacity: 0.2;
+	}
+}
+
+@keyframes house-spinner-bg-pulse {
+	0%,
+	100% {
+		transform: scale(1);
+		opacity: 1;
+	}
+	50% {
+		transform: scale(0.94);
+		opacity: 0.7;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.house-spinner__bg,
+	.house-spinner__house {
+		animation: none;
+		stroke-dashoffset: 0;
+	}
+}

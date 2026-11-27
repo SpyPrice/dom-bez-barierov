@@ -23,7 +23,7 @@ interface Props {
 	thickness: number
 	view: ViewBox
 	setView: (v: ViewBox) => void
-	onAddWall: (a: Point, b: Point, type: Tool) => void
+	onAddWall: (a: Point, b: Point, type: 'wall' | 'door') => void
 	onDeleteWall: (w: Wall) => void
 	onRenameRoom: (key: string, name: string) => void
 	promptRoomKey: string | null
@@ -57,6 +57,7 @@ export const Canvas = ({
 	onDeviceClick,
 }: Props) => {
 	const svgRef = useRef<SVGSVGElement>(null)
+	const erasing = useRef(false)
 
 	// Состояние для рисования стен
 	const [drag, setDrag] = useState<{
@@ -82,6 +83,20 @@ export const Canvas = ({
 		offset: Point
 		sx: number
 		sy: number
+	} | null>(null)
+
+	// отслеживание активных указателей для pinch-zoom
+	const pointers = useRef<Map<number, { x: number; y: number }>>(new Map())
+	const pinch = useRef<{
+		dist: number
+		center: Point
+		view: ViewBox
+	} | null>(null)
+	// Двухпальцевое панорамирование
+	const twoFingerPan = useRef<{
+		x: number
+		y: number
+		view: ViewBox
 	} | null>(null)
 
 	// Обновляем масштаб при изменении view или ресайзе окна
@@ -131,10 +146,61 @@ export const Canvas = ({
 		return best ? { x: best.x, y: best.y } : p
 	}
 
+	// удаление стены под точкой
+	const eraseAt = (screenX: number, screenY: number) => {
+		const svg = svgRef.current
+		if (!svg) return
+		const hit = document.elementFromPoint(screenX, screenY)
+		const target = hit?.closest('[data-wall]') as Element | null
+		if (!target) return
+		const data = JSON.parse(target.getAttribute('data-wall')!) as Wall
+		const w = walls.find(
+			x =>
+				dist(x.a, data.a) < 0.1 &&
+				dist(x.b, data.b) < 0.1 &&
+				x.type === data.type,
+		)
+		if (w) onDeleteWall(w)
+	}
+
+	// Полная отмена текущих жестов (нужно при переходе к pinch)
+	const cancelActiveGestures = () => {
+		setDrag(null)
+		setDragDevice(null)
+		setPan(null)
+		erasing.current = false
+	}
+
 	const handlePointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
+		// 0. Регистрируем указатель
+		pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+		if (pointers.current.size === 2) {
+			const [p1, p2] = [...pointers.current.values()]
+			const cx = (p1.x + p2.x) / 2
+			const cy = (p1.y + p2.y) / 2
+			const d = Math.hypot(p1.x - p2.x, p1.y - p2.y)
+			pinch.current = {
+				dist: d,
+				center: toWorld({ clientX: cx, clientY: cy }),
+				view: { ...view },
+			}
+			twoFingerPan.current = {
+				x: cx,
+				y: cy,
+				view: { ...view },
+			}
+			// Отменяем начатое рисование одним пальцем
+			cancelActiveGestures()
+			return
+		}
+
+		// Если уже идёт pinch - игнорируем нажатия
+		if (pinch.current) return
+
 		// 1. Проверяем, кликнули ли мы на устройство
 		const deviceNode = (e.target as Element).closest('[data-device-id]')
-		if (deviceNode && e.button === 0) {
+		if (deviceNode && (e.button === 0 || e.pointerType === 'touch')) {
 			const id = deviceNode.getAttribute('data-device-id')!
 			const dev = devices.find(d => d.id === id)
 			if (dev) {
@@ -153,7 +219,7 @@ export const Canvas = ({
 			}
 		}
 
-		// 2. Панорамирование (средняя кнопка)
+		// 2. Панорамирование
 		if (e.button === 1) {
 			e.preventDefault()
 			setPan({ x: e.clientX, y: e.clientY, view: { ...view } })
@@ -161,8 +227,20 @@ export const Canvas = ({
 			return
 		}
 
-		// 3. Рисование стен/дверей (левая кнопка)
-		if (e.button !== 0) return
+		// 3. Ластик
+		if (tool === 'eraser') {
+			if (e.button !== 0 && e.pointerType !== 'touch') return
+			erasing.current = true
+			eraseAt(e.clientX, e.clientY)
+			svgRef.current!.setPointerCapture(e.pointerId)
+			return
+		}
+
+		// 4. Рисование стен/дверей
+		if (e.button !== 0 && e.pointerType !== 'touch') return
+		// Не рисуем дверь/стену, если tool некорректный
+		if (tool !== 'wall' && tool !== 'door') return
+
 		const p = snapPoint(toWorld(e), gridSize)
 		const start = snapToEndpoint(p)
 		setDrag({ start, current: start, sx: e.clientX, sy: e.clientY })
@@ -170,6 +248,51 @@ export const Canvas = ({
 	}
 
 	const handlePointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
+		// Обновляем позицию указателя
+		if (pointers.current.has(e.pointerId)) {
+			pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+		}
+
+		// Pinch + двухпальцевое панорамирование
+		if (pinch.current && pointers.current.size === 2) {
+			const [p1, p2] = [...pointers.current.values()]
+			const d = Math.hypot(p1.x - p2.x, p1.y - p2.y)
+			const cx = (p1.x + p2.x) / 2
+			const cy = (p1.y + p2.y) / 2
+
+			if (pinch.current.dist > 0 && d > 0) {
+				const factor = pinch.current.dist / d
+				const nw = Math.min(20000, Math.max(200, pinch.current.view.w * factor))
+				const realFactor = nw / pinch.current.view.w
+				const c = pinch.current.center
+
+				// Зум вокруг центра между пальцами
+				let x = c.x - (c.x - pinch.current.view.x) * realFactor
+				let y = c.y - (c.y - pinch.current.view.y) * realFactor
+
+				// Добавляем смещение от движения центра (панорамирование двумя пальцами)
+				const scale = nw / (svgRef.current!.clientWidth || 1)
+				if (twoFingerPan.current) {
+					x -= (cx - twoFingerPan.current.x) * scale
+					y -= (cy - twoFingerPan.current.y) * scale
+				}
+
+				setView({
+					x,
+					y,
+					w: nw,
+					h: pinch.current.view.h * realFactor,
+				})
+			}
+			return
+		}
+
+		// Ластик (протяжка)
+		if (erasing.current) {
+			eraseAt(e.clientX, e.clientY)
+			return
+		}
+
 		// Перетаскивание устройства
 		if (dragDevice) {
 			const p = toWorld(e)
@@ -180,7 +303,7 @@ export const Canvas = ({
 			return
 		}
 
-		// Панорамирование
+		// Панорамирование (только СКМ)
 		if (pan) {
 			const scale = view.w / (svgRef.current!.clientWidth || 1)
 			setView({
@@ -200,6 +323,21 @@ export const Canvas = ({
 	}
 
 	const handlePointerUp = (e: React.PointerEvent<SVGSVGElement>) => {
+		pointers.current.delete(e.pointerId)
+
+		// Завершаем pinch при поднятии одного из двух пальцев
+		if (pinch.current && pointers.current.size < 2) {
+			pinch.current = null
+			twoFingerPan.current = null
+			return
+		}
+
+		// Ластик
+		if (erasing.current) {
+			erasing.current = false
+			return
+		}
+
 		// Отпускание устройства
 		if (dragDevice) {
 			// Вычисляем, было ли это перетаскиванием или просто кликом
@@ -229,8 +367,20 @@ export const Canvas = ({
 		const moved = Math.hypot(e.clientX - sx, e.clientY - sy) > 4
 		setDrag(null)
 		if (moved && dist(start, current) > 2) {
-			onAddWall(start, current, tool)
+			if (tool === 'wall' || tool === 'door') {
+				onAddWall(start, current, tool)
+			}
 		}
+	}
+
+	// Отмена pinch при pointercancel
+	const handlePointerCancel = (e: React.PointerEvent<SVGSVGElement>) => {
+		pointers.current.delete(e.pointerId)
+		if (pointers.current.size < 2) {
+			pinch.current = null
+			twoFingerPan.current = null
+		}
+		erasing.current = false
 	}
 
 	const handleContextMenu = (e: React.MouseEvent<SVGSVGElement>) => {
@@ -251,7 +401,7 @@ export const Canvas = ({
 		if (w) onDeleteWall(w)
 	}
 
-	// Wheel listener (Zoom)
+	// СКМ (Zoom)
 	useEffect(() => {
 		const svg = svgRef.current
 		if (!svg) return
@@ -297,7 +447,9 @@ export const Canvas = ({
 			onPointerDown={handlePointerDown}
 			onPointerMove={handlePointerMove}
 			onPointerUp={handlePointerUp}
+			onPointerCancel={handlePointerCancel}
 			onContextMenu={handleContextMenu}
+			style={{ touchAction: 'none' }}
 		>
 			<defs>
 				<pattern

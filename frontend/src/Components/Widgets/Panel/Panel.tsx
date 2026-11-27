@@ -27,6 +27,12 @@ export const Panel = (p: Props) => {
 				{/* <ToolBtn active={p.tool === 'door'} onClick={() => p.setTool('door')}>
 					Дверь
 				</ToolBtn> */}
+				<ToolBtn
+					active={p.tool === 'eraser'}
+					onClick={() => p.setTool('eraser')}
+				>
+					Ластик
+				</ToolBtn>
 			</div>
 
 			<button className={styles.btn} onClick={p.onUndo}>

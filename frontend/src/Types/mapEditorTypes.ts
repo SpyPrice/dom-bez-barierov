@@ -18,7 +18,7 @@ export interface Room {
 	name: string | null
 }
 
-export type Tool = 'wall' | 'door'
+export type Tool = 'wall' | 'door' | 'eraser'
 
 export interface ViewBox {
 	x: number

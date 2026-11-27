@@ -60,7 +60,7 @@ export const DeviceMenu = ({
 							}}
 							className={`${styles.toggleBtn} ${isOn ? styles.on : ''}`}
 						>
-							{isOn ? 'ON' : 'OFF'}
+							{isOn ? 'ВКЛ' : 'ВЫКЛ'}
 						</button>
 					)}
 				</div>

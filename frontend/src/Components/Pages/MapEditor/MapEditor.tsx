@@ -86,7 +86,7 @@ export const MapEditor = () => {
 	}, [walls])
 
 	const handleAddWall = useCallback(
-		(a: Point, b: Point, type: Tool) => {
+		(a: Point, b: Point, type: 'wall' | 'door') => {
 			const next = addWallToState(walls, a, b, type)
 			if (next !== walls) commit(next)
 		},

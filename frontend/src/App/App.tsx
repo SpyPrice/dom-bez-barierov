@@ -27,6 +27,7 @@ function App() {
 									</ProtectedRoute>
 								}
 							/>
+							<Route path='/map' element={<MapEditor />} />
 						</Route>
 						<Route path='/auth/callback' element={<AuthCallback />} />
 					</Routes>

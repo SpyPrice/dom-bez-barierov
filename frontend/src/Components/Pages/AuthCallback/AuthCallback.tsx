@@ -1,8 +1,10 @@
 import { yandexApi } from '@/Api/yandexApi'
+import HouseSpinner from '@/Components/Widgets/HouseSpinner'
 import { useAuth } from '@/Contexts/AuthContext'
 import { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
+import styles from './AuthCallback.module.scss'
 
 export const AuthCallback = () => {
 	const [searchParams] = useSearchParams()
@@ -42,14 +44,8 @@ export const AuthCallback = () => {
 	}, [code, navigate, setUserAfterLogin])
 
 	return (
-		<div
-			style={{
-				display: 'flex',
-				justifyContent: 'center',
-				alignItems: 'center',
-				height: '100vh',
-			}}
-		>
+		<div className={styles.container}>
+			<HouseSpinner />
 			<h2>Авторизация...</h2>
 		</div>
 	)
